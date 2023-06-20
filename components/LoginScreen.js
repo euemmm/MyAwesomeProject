@@ -1,13 +1,15 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useMemo} from 'react';
 import {View, Pressable, Text, TextInput, StyleSheet} from 'react-native';
 import CheckBox from 'expo-checkbox'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
 
 const Login = ({navigation}) => {
 
     const [ID, onChangeID] = useState('')
     const [PW, onChangePW] = useState('')
     const [isChecked, setCheck] = useState(false)
+    const isFocused = useIsFocused()
     var stars = ''
     var canLogin = false
 
@@ -87,7 +89,12 @@ const Login = ({navigation}) => {
 
     }
 
-    useEffect(() => {_fetchID()})
+    useEffect(() => {
+        console.log("asdf")
+        if(isFocused) {
+            _fetchID()
+        }
+    },[isFocused])
 
     return(
         <View style = {{flex: 1}}>
