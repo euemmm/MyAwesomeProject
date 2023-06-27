@@ -5,6 +5,26 @@ import * as ImagePicker from 'expo-image-picker'
 const App = () => {
     const [image, setImage] = React.useState(null);
 
+    const openCamera = async () => {
+        
+        const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    
+        if (permissionResult.granted === false) {
+          alert("You've refused to allow this app to access your camera!");
+          return;
+        }
+    
+        const result = await ImagePicker.launchCameraAsync();
+    
+        // Explore the result
+        console.log(result);
+    
+        if (!result.cancelled) {
+          setImage(result.uri);
+          console.log(result.uri);
+        }
+    }
+
     const handleChooseImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
 
@@ -51,6 +71,7 @@ const App = () => {
                 </>
             )}
             <Button title="Choose Image" onPress={handleChooseImage} />
+            <Button title="Take Photo" onPress={openCamera} />
         </View>
     );
 };
