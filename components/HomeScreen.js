@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Image, Button, Platform } from 'react-native';
+import { View, Image, Button, Platform, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker'
 
 const App = () => {
     const [image, setImage] = React.useState(null);
+    const [prediction, setPrediction] = React.useState(0);
 
     const openCamera = async () => {
         
@@ -19,16 +20,16 @@ const App = () => {
         // Explore the result
         console.log(result);
     
-        if (!result.cancelled) {
-          setImage(result.uri);
-          console.log(result.uri);
+        if (!result.canceled) {
+          setImage(result.assets[0].uri);
+          console.log(result.assets[0].uri);
         }
     }
 
     const handleChooseImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
 
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1,1],
             quality: 1
@@ -43,16 +44,31 @@ const App = () => {
 
     const handleUploadImage = () => {
 
-        const data = new FormData();
-        data.append('image', {uri: Platform.OS === 'ios' ? image.replace('file://', '') : image.uri})
+        if(Platform.OS === 'ios'){
+            console.log(image)
+            setImage(image.replace('file://', ''))
+            console.log(image)
+        }
 
-        fetch(`https://api.euem.net/ai/mnist/jpg`, {
+        const data = new FormData();
+        data.append('image', {uri: image, name: 'image.jpg', type: 'image/jpg'})
+
+        console.log(data._parts)
+
+        var responseClone;
+
+        fetch(`http://api.euem.net/ai/mnist/jpg`, {
             method: 'POST',
-            body: data,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'Connection': 'keep-alive',
+                Accept: 'application/json',
+            },
+            body: data
         })
-            .then((response) => response.json())
+            .then((response) => {responseClone = response.clone(); return response.json()})
             .then((response) => {
-                console.log('response', response);
+                setPrediction(response.prediction)
             })
             .catch((error) => {
                 console.log('error', error);
@@ -61,10 +77,15 @@ const App = () => {
 
     return (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            {!!prediction && (
+                <>
+                    <Text style={{marginBottom: 50, fontWeight: 'bold', fontSize: 30}}>The AI thinks its {prediction}</Text>
+                </>
+            )}
             {image && (
                 <>
                     <Image
-                        source={{ uri: image }}
+                        source={{ uri: image }} 
                         style={{ width: 300, height: 300 }}
                     />
                     <Button title="Upload Image" onPress={handleUploadImage} />
